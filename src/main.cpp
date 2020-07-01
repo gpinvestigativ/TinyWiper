@@ -165,6 +165,7 @@ void loop() {
   while (!sd.begin(SD_CONFIG)) {
     if (digitalRead(cardDetectPin) == 1) break;
   }
+
   cout << F("Card size: ") << sd.sectorCount() * 512E-9;
   cout << F(" GB (GB = 1E9 bytes)") << endl;
   cout << F("Speed: ") << sd.kHzSdClk() << F(" kHz") << endl;
@@ -172,6 +173,7 @@ void loop() {
 
   cidDmp();
 
+  //pre wipe info screen
   int aniCount = 64;
   while (aniCount > 0) {
     display.clearDisplay();
@@ -198,6 +200,7 @@ void loop() {
     if (digitalRead(cardDetectPin) == 1) break;
   }
 
+  //actual wiping
   if (digitalRead(cardDetectPin) == 0) {
     cout << F("Starting full disk wipe") << endl << endl;
     t = millis();
@@ -208,8 +211,16 @@ void loop() {
           buf[i] = random();
         }
       }
-      sd.writeSector(i, buf);
-
+      bool writeStatus = sd.writeSector(i, buf);
+      //cout << "Write: " << writeStatus << endl;
+      if(!writeStatus){ //error handling
+        //sd.errorCode();
+        cout << sd.errorCode();
+        printSdErrorSymbol(&Serial, sd.errorCode());
+        printSdErrorText(&Serial, sd.errorCode());
+        cout << endl;
+        //delay(100);
+      }
       if ((millis() - lastT) > 1000) {
         lastT = millis();
         uint32_t usedtime = millis() - t;
