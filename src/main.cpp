@@ -201,6 +201,7 @@ void loop() {
   }
 
   //actual wiping
+  int failedSectorCount = 0;
   if (digitalRead(cardDetectPin) == 0) {
     cout << F("Starting full disk wipe") << endl << endl;
     t = millis();
@@ -211,21 +212,28 @@ void loop() {
           buf[i] = random();
         }
       }
+      auto startus = micros();
       bool writeStatus = sd.writeSector(i, buf);
-      //cout << "Write: " << writeStatus << endl;
+
       if(!writeStatus){ //error handling
-        //sd.errorCode();
-        cout << sd.errorCode();
+        cout << (int)sd.errorCode() << " ";
         printSdErrorSymbol(&Serial, sd.errorCode());
+        cout << " ";
         printSdErrorText(&Serial, sd.errorCode());
         cout << endl;
-        //delay(100);
+        failedSectorCount++;
       }
+      if(micros()-startus > 888888){ //hacky fix for random SD Card errors
+        cout << "restart sd " << i << endl;
+        sd.begin(SD_CONFIG);
+      }
+
       if ((millis() - lastT) > 1000) {
         lastT = millis();
         uint32_t usedtime = millis() - t;
         double msPerSector = (double)usedtime / (double)i;
         uint32_t sectorsLeft = sd.sectorCount() - i;
+
         //cout << ((double)i/(double)sd.sectorCount())*100 << " % - " << i*512E-3/usedtime << " MB/s - " << usedtime << " " << msPerSector << " " << sectorsLeft << " " << (sectorsLeft*msPerSector)/60000 << " min left"<< endl;
 
         display.clearDisplay();
@@ -253,28 +261,41 @@ void loop() {
   //FORMAT SD Card after random data write
   // SdCardFactory constructs and initializes the appropriate card.
   if (digitalRead(cardDetectPin) == 0) {
-    formatCompleted = true;
-    SdCardFactory cardFactory;
-    SdCard* m_card = cardFactory.newCard(SD_CONFIG);
-    if (!m_card || m_card->errorCode()) {
-      cout << "card init failed" << endl;
-      formatCompleted = false;
-      return;
+    int formatTries = 10;
+    while(formatTries-- > 0 && !formatCompleted){
+      formatCompleted = true;
+      SdCardFactory cardFactory;
+      SdCard* m_card = cardFactory.newCard(SD_CONFIG);
+      if (!m_card || m_card->errorCode()) {
+        cout << "card init failed" << endl;
+        formatCompleted = false;
+      }
+      uint8_t  sectorBuffer[512];
+      FatFormatter fatFormatter;
+      if (!fatFormatter.format(m_card, sectorBuffer, &Serial)) {
+        cout << "card format failed" << endl;
+        formatCompleted = false;
+      }
     }
-    uint8_t  sectorBuffer[512];
-    FatFormatter fatFormatter;
-    if (!fatFormatter.format(m_card, sectorBuffer, &Serial)) {
-      cout << "card format failed" << endl;
-      formatCompleted = false;
-    }
+    
   }
   t = millis() - t;
   durationMinutes = (int)round((t / 60000));
   cout << endl << F("Done") << endl;
 
+  float successRate = ((float)(sd.sectorCount()-failedSectorCount)/(float)sd.sectorCount())*100.0f;
+
+  cout << sd.sectorCount() << " f: " << failedSectorCount << endl;
+
   //wait for card disconnect
   aniCount = 28;
-  while (!digitalRead(cardDetectPin)) {
+  int cardDetectCounter = 0;
+  while (cardDetectCounter < 10) {
+    if(!digitalRead(cardDetectPin)){
+      cardDetectCounter = 0;
+    }else{
+      cardDetectCounter++;
+    }
     display.clearDisplay();
     display.drawBitmap(128 - aniCount, 1, sdCardBitmap, 77, 62, SSD1306_WHITE);
     aniCount -= 1;
@@ -282,18 +303,26 @@ void loop() {
     drawBattery();
     display.setTextColor(SSD1306_WHITE);
 
-    if (formatCompleted && randWriteCompleted) {
+    if (randWriteCompleted) {
       display.setTextSize(2);
       display.setCursor(0, 15); display.print("Finished");
+      display.setTextSize(1);display.setTextSize(1);
       display.setCursor(0, 35); display.print(durationMinutes); display.println(" min");
-    } else if (randWriteCompleted && !formatCompleted) {
-      display.setTextSize(2);
-      display.setCursor(0, 15); display.print("Error");
-      display.setCursor(0, 35); display.print("Format failed");
+      display.setCursor(0, 46); display.print(successRate); 
+      if(formatCompleted)
+        display.println(" % success");
+      else
+        display.println(" % success.");
     } else if (!randWriteCompleted && formatCompleted) {
       display.setTextSize(2);
       display.setCursor(0, 15); display.print("Error");
+      display.setTextSize(1);
       display.setCursor(0, 35); display.print("Wipe failed");
+    } else {
+      display.setTextSize(2);
+      display.setCursor(0, 15); display.print("Error");
+      display.setTextSize(1);
+      display.setCursor(0, 35); display.print("all failed");
     }
     display.setTextSize(1);
     display.setCursor(0, 56);
