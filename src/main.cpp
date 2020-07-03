@@ -201,8 +201,8 @@ void loop() {
     uint32_t lastT = t;
     for (unsigned int i = 0; i < sd.sectorCount(); i++) {
       if (i % 10 == 0) {
-        for (size_t i = 0; i < BUF_SIZE; i += 4) {
-          buf[i] = random();
+        for (size_t i = 0; i < BUF_SIZE/4; i++) {
+          buf32[i]= random();
         }
       }
       auto startus = micros();
@@ -297,7 +297,7 @@ void loop() {
       double progress = ((double)curSector / (double)failedSectors.size()) * 100;
       //display.print(curSector * 512E-3 / usedtime); display.println(" MB/s");
       display.print(progress); display.println(" %");
-      display.print((int)((sectorsLeft * msPerSector) / 60000)); display.println(" min left");
+      //display.print((int)((sectorsLeft * msPerSector) / 60000)); display.println(" min left");
       display.drawRect(0, 52, 80, 8, SSD1306_WHITE);
       display.fillRect(2, 54, (int)round(progress * 0.76), 4, SSD1306_WHITE);
       display.display();
@@ -309,6 +309,8 @@ void loop() {
 
   //FORMAT SD Card after random data write
   // SdCardFactory constructs and initializes the appropriate card.
+  //#define FORMATCARD
+  #ifdef FORMATCARD
   if (digitalRead(cardDetectPin) == 0) {
     int formatTries = 10;
     while(formatTries-- > 0 && !formatCompleted){
@@ -326,8 +328,9 @@ void loop() {
         formatCompleted = false;
       }
     }
-    
   }
+  #endif
+
   t = millis() - t;
   durationMinutes = (int)round((t / 60000));
   cout << endl << F("Done") << endl;
