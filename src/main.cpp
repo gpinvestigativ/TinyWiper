@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <vector>
 
 #include "SdFat.h"
 #include <sdios.h>
@@ -12,31 +13,17 @@
 
 //#define DEBUG_BATT
 
+#define VERSION 0.2
+
 const float analogDivider = 160.0f;
 
 #define cardDetectPin 23
 #define writeProtectPin 22
+#define DISPLAY_RST_PIN 15
 
 const size_t BUF_SIZE = 512;
 
-#ifndef SDCARD_SS_PIN
-const uint8_t SD_CS_PIN = SS;
-#else  // SDCARD_SS_PIN
-// Assume built-in SD is used.
-const uint8_t SD_CS_PIN = SDCARD_SS_PIN;
-#endif  // SDCARD_SS_PIN
-
-// Try max SPI clock for an SD. Reduce SPI_CLOCK if errors occur.
-#define SPI_CLOCK SD_SCK_MHZ(50)
-
-// Try to select the best SD card configuration.
-#if HAS_SDIO_CLASS
 #define SD_CONFIG SdioConfig(FIFO_SDIO)
-#elif ENABLE_DEDICATED_SPI
-#define SD_CONFIG SdSpiConfig(SD_CS_PIN, DEDICATED_SPI, SPI_CLOCK)
-#else  // HAS_SDIO_CLASS
-#define SD_CONFIG SdSpiConfig(SD_CS_PIN, SHARED_SPI, SPI_CLOCK)
-#endif  // HAS_SDIO_CLASS
 
 //==============================================================================
 // End of configuration constants.
@@ -48,7 +35,7 @@ uint8_t* buf = (uint8_t*)buf32;
 
 SdioCard sd;
 
-Adafruit_SSD1306 display(128, 64, &Wire, 15, 4000000UL, 100000UL);
+Adafruit_SSD1306 display(128, 64, &Wire, DISPLAY_RST_PIN, 4000000UL, 100000UL);
 
 ArduinoOutStream cout(Serial);
 
@@ -114,6 +101,10 @@ void setup() {
   display.setRotation(2);
   display.clearDisplay();
   display.drawBitmap(0, 0, teensyWiper01Bitmap, 128, 64, SSD1306_WHITE);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(105, 49);
+  display.setTextSize(1);
+  display.print(VERSION,1);
   display.display();
 
   pinMode(cardDetectPin, INPUT_PULLUP);
@@ -129,7 +120,7 @@ void setup() {
   uint32_t tword = trng_word();
   cout << "random seed: " << tword << endl;
   srandom(tword);
-  delay(500);
+  delay(1000);
 }
 //------------------------------------------------------------------------------
 void loop() {
@@ -202,6 +193,8 @@ void loop() {
 
   //actual wiping
   int failedSectorCount = 0;
+  std::vector<unsigned int> failedSectors;
+  #if 1
   if (digitalRead(cardDetectPin) == 0) {
     cout << F("Starting full disk wipe") << endl << endl;
     t = millis();
@@ -222,6 +215,7 @@ void loop() {
         printSdErrorText(&Serial, sd.errorCode());
         cout << endl;
         failedSectorCount++;
+        failedSectors.push_back(i);
       }
       if(micros()-startus > 888888){ //hacky fix for random SD Card errors
         cout << "restart sd " << i << endl;
@@ -257,6 +251,61 @@ void loop() {
         randWriteCompleted = true;
     }
   }
+  #endif
+
+  //retry failed Sectors
+  #if 1
+  //for(int x = 0; x < 8000; x++)failedSectors.push_back(x);
+
+  cout << "retry " << failedSectors.size() << " failed sectors";
+  uint32_t lastT = t;
+  uint32_t curSector = 0;
+  for(auto sec : failedSectors){
+    int secRetries = 5;
+    curSector++;
+    for (size_t i = 0; i < BUF_SIZE; i += 4) {
+      buf[i] = random();
+    }
+    while(secRetries-- > 0){
+      auto startus = micros();
+      if(sd.writeSector(sec, buf)){
+        secRetries = 0;
+        failedSectorCount--;
+      }
+      if(micros()-startus > 888888){ //hacky fix for random SD Card errors
+        cout << "restart sd " << sec << endl;
+        sd.begin(SD_CONFIG);
+      }
+    }
+
+    if ((millis() - lastT) > 200) {
+      lastT = millis();
+      uint32_t usedtime = millis() - t;
+      double msPerSector = (double)usedtime / (double)curSector;
+      uint32_t sectorsLeft = failedSectors.size() - curSector;
+
+      //cout << ((double)i/(double)sd.sectorCount())*100 << " % - " << i*512E-3/usedtime << " MB/s - " << usedtime << " " << msPerSector << " " << sectorsLeft << " " << (sectorsLeft*msPerSector)/60000 << " min left"<< endl;
+
+      display.clearDisplay();
+      drawBattery();
+      display.drawBitmap(100, 1, sdCardBitmap, 77, 62, SSD1306_WHITE);
+      display.setTextColor(SSD1306_WHITE);
+      display.setCursor(0, 15);
+      display.setTextSize(1);
+      display.println("Retry failed");
+      display.println("sectors...");
+      double progress = ((double)curSector / (double)failedSectors.size()) * 100;
+      //display.print(curSector * 512E-3 / usedtime); display.println(" MB/s");
+      display.print(progress); display.println(" %");
+      display.print((int)((sectorsLeft * msPerSector) / 60000)); display.println(" min left");
+      display.drawRect(0, 52, 80, 8, SSD1306_WHITE);
+      display.fillRect(2, 54, (int)round(progress * 0.76), 4, SSD1306_WHITE);
+      display.display();
+      if (digitalRead(cardDetectPin) == 1) break;
+    }
+  }
+  cout << "finished, " << failedSectorCount << " sectors couldn't be deleted";
+  #endif
 
   //FORMAT SD Card after random data write
   // SdCardFactory constructs and initializes the appropriate card.
