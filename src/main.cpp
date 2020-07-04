@@ -12,6 +12,7 @@
 #include <trng.h>
 
 //#define DEBUG_BATT
+#define FORMATCARD
 
 #define VERSION 0.2
 
@@ -99,6 +100,12 @@ void showStartScreen() {
 void setup() {
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   display.setRotation(2);
+
+  // display.clearDisplay();
+  // display.drawBitmap(0, 0, gpi, 128, 64, SSD1306_WHITE);
+  // display.display();
+  // delay(200);
+  
   display.clearDisplay();
   display.drawBitmap(0, 0, teensyWiper01Bitmap, 128, 64, SSD1306_WHITE);
   display.setTextColor(SSD1306_WHITE);
@@ -106,6 +113,7 @@ void setup() {
   display.setTextSize(1);
   display.print(VERSION,1);
   display.display();
+
 
   pinMode(cardDetectPin, INPUT_PULLUP);
   pinMode(writeProtectPin, INPUT_PULLUP);
@@ -118,7 +126,7 @@ void setup() {
 
   trng_init();
   uint32_t tword = trng_word();
-  cout << "random seed: " << tword << endl;
+  //cout << "random seed: " << tword << endl;
   srandom(tword);
   delay(1000);
 }
@@ -304,16 +312,17 @@ void loop() {
       if (digitalRead(cardDetectPin) == 1) break;
     }
   }
-  cout << "finished, " << failedSectorCount << " sectors couldn't be deleted";
+  cout << "finished, " << failedSectorCount << " sectors couldn't be deleted" << endl;
   #endif
 
   //FORMAT SD Card after random data write
   // SdCardFactory constructs and initializes the appropriate card.
-  //#define FORMATCARD
   #ifdef FORMATCARD
   if (digitalRead(cardDetectPin) == 0) {
+    cout << "try formating card now " << endl;
     int formatTries = 10;
     while(formatTries-- > 0 && !formatCompleted){
+      cout << "Try Format " << 10-formatTries << endl;
       formatCompleted = true;
       SdCardFactory cardFactory;
       SdCard* m_card = cardFactory.newCard(SD_CONFIG);
