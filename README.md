@@ -1,5 +1,7 @@
 # TeensyWiper
 
+![Image of TeensyWiper](./images/sd1kl.jpg)
+
 The TeensyWiper is a small, battery powered device which securely deletes your SD cards by overwriting the whole card with randomly generated data.  
 
 > *Note:* this is an successor project to the [SDCardWiper](https://github.com/gpinvestigativ/SDCardWiper) Project, which is based on a Raspberry Pi Zero and readily available parts.  
@@ -10,11 +12,24 @@ If you want to make sure that your data can not be reconstructed, this device wi
 
 ## Hardware
 
-add hardware description here
+* Teensy 4.0 as MCU
+* Custom PCB
+* 128x64 I2C OLED Display
+* Full Size SD Card Slot
+* 400 mAh Lipo Battery ~ 2h battery life
+* Mirco USB for fimware update & battery charging
+* Hardware on/off switch
+* 3D printed case
+
+![Image of TeensyWiper](./images/sd2kl.jpg)
 
 ## Software
 
-add software description here
+* True random number generator used to initialize RNG
+* automatically detect SD card, start wiping automatically after timeout
+* every Nth 512byte Block, generate a new random buffer (for speedup purposes currently every 10th block)
+* keep track of successfully written blocks, try to re-write failed blocks at the end
+* format card after wiping
 
 ## Q&A
 
