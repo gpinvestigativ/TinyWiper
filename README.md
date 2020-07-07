@@ -34,7 +34,8 @@ If you want to make sure that your data can not be reconstructed, this device wi
 
 ## Q&A
 
-*Q: why not use a secure erase software like the security options within macs disk manager?*  
-A: While it is totaly viable to use secure erase software options for this task, the TinyWiper has 2 major advantages:
-* overwriting a 64GB SD card can take between 1-2 hours, 400GB multiple hours, if you don't want your computers SD port to be blocked for such a long time or don't like to have to keep your computer running, the TinyWiper is a handy device which fits in your pocket.
-* software that runs on your computer can much easier be infiltrated by a virus or an attacker. The TinyWiper is an unteathered device, which makes it impossible to hack without physical access to it.
+*Q: Why not use a secure erase software on a computer like the security options within macs disk manager?*  
+A: While it is totaly viable to use secure erase software options for this task, the TinyWiper has 3 major advantages:
+* TinyWiper is highly portable. You can carry it in your pocket in the field and use it standalone without having to use a computer.
+* Securely wiping SD cards is time consuming. It easily blocks the sd card slot on your computer for several hours. Overwriting a 64GB SD card can take between 1-2 hours, 400GB multiple hours.
+* Software that runs on your computer can much easier be infiltrated by a virus or an attacker. The TinyWiper is an unteathered device, which makes it impossible to hack without physical access to it.
