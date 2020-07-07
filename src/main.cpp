@@ -107,7 +107,7 @@ void setup() {
   // delay(200);
   
   display.clearDisplay();
-  display.drawBitmap(0, 0, teensyWiper01Bitmap, 128, 64, SSD1306_WHITE);
+  display.drawBitmap(0, 0, tinyWiper, 128, 64, SSD1306_WHITE);
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(105, 49);
   display.setTextSize(1);

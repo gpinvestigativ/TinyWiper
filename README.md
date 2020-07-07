@@ -1,8 +1,8 @@
-# TeensyWiper
+# TinyWiper
 
-![Image of TeensyWiper](./images/sd1kl.jpg)
+![Image of TinyWiper](./images/sd1kl.jpg)
 
-The TeensyWiper is a small, battery powered device which securely deletes your SD cards by overwriting the whole card with randomly generated data.  
+The TinyWiper is a small, battery powered device which securely deletes your SD cards by overwriting the whole card with randomly generated data.  
 
 > *Note:* this is an successor project to the [SDCardWiper](https://github.com/gpinvestigativ/SDCardWiper) Project, which is based on a Raspberry Pi Zero and readily available parts.  
 
@@ -21,7 +21,7 @@ If you want to make sure that your data can not be reconstructed, this device wi
 * Hardware on/off switch
 * 3D printed case
 
-![Image of TeensyWiper](./images/sd2kl.jpg)
+![Image of TinyWiper](./images/sd2kl.jpg)
 
 ## Software
 
@@ -34,6 +34,6 @@ If you want to make sure that your data can not be reconstructed, this device wi
 ## Q&A
 
 *Q: why not use a secure erase software like the security options within macs disk manager?*  
-A: While it is totaly viable to use secure erase software options for this task, the TeensyWiper has 2 major advantages:
-* overwriting a 64GB SD card can take between 1-2 hours, 400GB multiple hours, if you don't want your computers SD port to be blocked for such a long time or don't like to have to keep your computer running, the TeensyWiper is a handy device which fits in your pocket.
-* software that runs on your computer can much easier be infiltrated by a virus or an attacker. The TeensyWiper is an unteathered device, which makes it impossible to hack without physical access to it.
+A: While it is totaly viable to use secure erase software options for this task, the TinyWiper has 2 major advantages:
+* overwriting a 64GB SD card can take between 1-2 hours, 400GB multiple hours, if you don't want your computers SD port to be blocked for such a long time or don't like to have to keep your computer running, the TinyWiper is a handy device which fits in your pocket.
+* software that runs on your computer can much easier be infiltrated by a virus or an attacker. The TinyWiper is an unteathered device, which makes it impossible to hack without physical access to it.
