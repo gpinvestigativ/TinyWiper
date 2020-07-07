@@ -25,11 +25,12 @@ If you want to make sure that your data can not be reconstructed, this device wi
 
 ## Software
 
-* True random number generator used to initialize RNG
+* True random number generator used to initialize PRNG
 * automatically detect SD card, start wiping automatically after timeout
 * every Nth 512byte Block, generate a new random buffer (for speedup purposes currently every 10th block)
 * keep track of successfully written blocks, try to re-write failed blocks at the end
 * format card after wiping
+* shows successrate at the end of the process
 
 ## Q&A
 
