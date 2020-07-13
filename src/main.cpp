@@ -33,6 +33,58 @@ uint8_t *buf = (uint8_t *)buf32;
 SdioCard sd;
 ArduinoOutStream cout(Serial);
 
+IntervalTimer ledTimer1;
+IntervalTimer ledTimer2;
+IntervalTimer ledTimer3;
+IntervalTimer ledTimer4;
+
+double progress = 0.0f;
+uint32_t blinkDutyMicros = 1500000;
+uint32_t errorDutyMicros = 50000;
+uint32_t finishedDutyMicros = 100000;
+
+void ledOff(){
+  analogWrite(LED, 0);
+  ledTimer3.end();
+}
+
+void blinkLed(){
+  ledTimer3.begin(ledOff, constrain((progress/100.0f)*blinkDutyMicros,50000, blinkDutyMicros));
+  analogWrite(LED, 255);
+}
+
+void fadeLed(){
+  static uint8_t ledVal = 0;
+  static int8_t ledAdder = 1;
+  if(ledVal > 254) ledAdder = -1;
+  else if(ledVal < 1) ledAdder = 1;
+  ledVal += ledAdder;
+  analogWrite(LED, ledVal);
+}
+
+void errorLed(){
+  static uint8_t ledVal = 0;
+  if(ledVal == 0) ledVal = 255;
+  else if(ledVal == 255) ledVal = 0;
+  analogWrite(LED, ledVal);
+}
+
+void finishedLed(){
+  static uint8_t stateCounter = 0;
+  static uint8_t ledVal = 0;
+
+  if(stateCounter == 7){
+    stateCounter = 0;
+    ledTimer4.update(finishedDutyMicros);
+  }
+  if(stateCounter%2) ledVal = 255;
+  else ledVal = 0;
+  analogWrite(LED, ledVal);
+  stateCounter++;
+  if(stateCounter == 7)
+    ledTimer4.update(1000000);
+}
+
 void cidDmp()
 {
   cid_t cid;
@@ -74,7 +126,6 @@ void setup()
   //cout << "random seed: " << tword << endl;
   srandom(tword);
   delay(1000);
-  analogWrite(LED, 0);
 }
 //------------------------------------------------------------------------------
 void loop()
@@ -84,16 +135,11 @@ void loop()
   bool writable = false;
   bool randWriteCompleted = false;
   bool formatCompleted = false;
-  double progress = 0.0f;
 
-  while (!sd.begin(SD_CONFIG))
-  {
-    cout << "no SD" << endl;
-    analogWrite(LED, 255);
-    delay(100);
-    analogWrite(LED, 0);
-  }
-  analogWrite(LED, 255);
+  ledTimer1.begin(fadeLed, 2000);
+  while (!sd.begin(SD_CONFIG)) cout << "no SD" << endl;
+  ledTimer1.end();
+  analogWrite(LED, 0);
 
   cout << F("Card size: ") << sd.sectorCount() * 512E-9;
   cout << F(" GB (GB = 1E9 bytes)") << endl;
@@ -105,6 +151,7 @@ void loop()
   int failedSectorCount = 0;
   std::vector<unsigned int> failedSectors;
 #if 1
+
   cout << F("Starting full disk wipe") << endl
        << endl;
   t = millis();
@@ -112,6 +159,10 @@ void loop()
   int consecFailCounter = 0;
   int curLedVal = 1;
   int ledAdder = 1;
+  progress = 0.0f;
+
+  //start LED progress timer
+  ledTimer2.begin(blinkLed, blinkDutyMicros);
   for (unsigned int i = 0; i < sd.sectorCount(); i++)
   {
     if (i % 10 == 0)
@@ -151,19 +202,6 @@ void loop()
       break;
     }
 
-    if(i%80 == 0){
-      int progressLedVal = (int)round(progress * 2.55);
-      if(curLedVal > 255){
-        ledAdder = -1;
-        curLedVal = 255;
-      }else if(curLedVal < 0){
-        ledAdder = 1;
-        curLedVal = 0;
-      }
-      curLedVal += ledAdder;
-      analogWrite(LED, curLedVal);
-    }
-
     if ((millis() - lastT) > 500)
     {
       lastT = millis();
@@ -171,7 +209,9 @@ void loop()
       double msPerSector = (double)usedtime / (double)i;
       uint32_t sectorsLeft = sd.sectorCount() - i;
       cout << ((double)i / (double)sd.sectorCount()) * 100 << " % - " << i * 512E-3 / usedtime << " MB/s - " << usedtime << " " << msPerSector << " " << sectorsLeft << " " << (sectorsLeft * msPerSector) / 60000 << " min left " << curLedVal << endl;
+      noInterrupts();
       progress = ((double)i / (double)sd.sectorCount()) * 100;
+      interrupts();
     }
     if (i == sd.sectorCount() - 1)
       randWriteCompleted = true;
@@ -250,6 +290,8 @@ void loop()
   }
 #endif
 
+  ledTimer2.end();
+
   t = millis() - t;
   durationMinutes = (int)round((t / 60000));
   cout << endl
@@ -258,12 +300,37 @@ void loop()
   float successRate = ((float)(sd.sectorCount() - failedSectorCount) / (float)sd.sectorCount()) * 100.0f;
 
   //wait for card disconnect
-  int t2;
+/*   int t2;
   do
   {
     t2 = millis();
     sd.isBusy();
-  } while (millis() - t2 > 900);
-  cout << "SD Removed " << endl;
-  delay(100);
+  } while (millis() - t2 < 900);
+  cout << "SD Removed " << endl; */
+
+
+  
+
+  if(randWriteCompleted){
+    //wait for SD removal
+    ledTimer4.begin(finishedLed, finishedDutyMicros);
+    bool sdStillInserted = true;
+    while (sdStillInserted)
+    {
+      int t2 = millis();
+      sd.isBusy();
+      int res = millis() - t2;
+      if(res > 100)
+        sdStillInserted = false;
+      delay(100);
+    }
+    ledTimer4.end();
+  }else{
+    ledTimer4.begin(errorLed, errorDutyMicros);
+    delay(5000);
+    ledTimer4.end();
+  }
+
+  analogWrite(LED, 0);
+  delay(500);
 }
