@@ -37,6 +37,12 @@ Part of the reason there is a custom PCB for the TinyWiper was, that at the time
 Recently the Teensy4.1 was released which conveniently has a micro SD card slot. Therefore I decided to make a compatible firmware for the T4.1 for people who want to build a quick DIY version of the TinyWiper. You can find this firmware in the [t41port](https://github.com/gpinvestigativ/TinyWiper/tree/t41port) branch.
 
 ## Setup
+If you don't want to build the firmware yourself you can find precompiled binaries under the releases tab.
+
+To flash the binaries you need the the [Teensy Loader](https://www.pjrc.com/teensy/loader.html) Application.
+
+**Caution:** the button on the Teensy is a reset button, be careful not to press it accidentally while wiping an SD Card. You could also make a little protective cover for the button.
+
 
 LED pattern | meaning 
 ---|---
