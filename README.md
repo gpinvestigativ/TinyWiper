@@ -32,6 +32,19 @@ If you want to make sure that your data can not be reconstructed, this device wi
 * format card after wiping
 * shows successrate at the end of the process
 
+# DIY Version
+Part of the reason there is a custom PCB for the TinyWiper was, that at the time of development only the Teensy4.0 was available which had it's high speed SDIO pins at a very DIY inconvenient place.  
+Recently the Teensy4.1 was released which conveniently has a micro SD card slot. Therefore I decided to make a compatible firmware for the T4.1 for people who want to build a quick DIY version of the TinyWiper. You can find this firmware in the *t41port* branch.
+
+## Setup
+
+LED pattern | meaning 
+---|---
+![t41idle](./images/idle.gif) | Idle - insert SD card
+![t41idle](./images/10percent.gif) | wiping - 10% done 
+![t41idle](./images/80percent.gif) | wiping - 80% done 
+![t41idle](./images/finished.gif) | wiping finished - remove sd card
+
 ## Q&A
 
 *Q: Why not use a secure erase software on a computer like the security options within macs disk manager?*  
