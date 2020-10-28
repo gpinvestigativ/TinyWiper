@@ -34,7 +34,7 @@ If you want to make sure that your data can not be reconstructed, this device wi
 
 # DIY Version
 Part of the reason there is a custom PCB for the TinyWiper was, that at the time of development only the Teensy4.0 was available which had it's high speed SDIO pins at a very DIY inconvenient place.  
-Recently the Teensy4.1 was released which conveniently has a micro SD card slot. Therefore I decided to make a compatible firmware for the T4.1 for people who want to build a quick DIY version of the TinyWiper. You can find this firmware in the gpinvestigativ/TinyWiper/tree/t41port branch.
+Recently the Teensy4.1 was released which conveniently has a micro SD card slot. Therefore I decided to make a compatible firmware for the T4.1 for people who want to build a quick DIY version of the TinyWiper. You can find this firmware in the [t41port](https://github.com/gpinvestigativ/TinyWiper/tree/t41port) branch.
 
 ## Setup
 
