@@ -1,4 +1,4 @@
-# TinyWiper
+# TinyWiper - a portable SD card wiper
 
 ![Image of TinyWiper](./images/sd1kl.jpg)
 
@@ -6,7 +6,7 @@ The TinyWiper is a small, battery powered device which securely deletes your SD 
 
 > *Note:* this is an successor project to the [SDCardWiper](https://github.com/gpinvestigativ/SDCardWiper) Project, which is based on a Raspberry Pi Zero and readily available parts.  
 
-**Did you know?** Just formating your SD card does not delete its contents, it just makes them invisible within the filebrowser of your operating system. Special forensic software can often easily reconstruct data on deleted or formated SD cards.  
+Just formating your SD card does not delete its contents, it just makes them invisible within the filebrowser of your operating system. Forensic software can often easily reconstruct data on deleted or formated SD cards.  
 
 If you want to make sure that your data can not be reconstructed, this device will securely erase your SD cards.
 
